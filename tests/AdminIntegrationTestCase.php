@@ -17,20 +17,21 @@ abstract class AdminIntegrationTestCase extends IntegrationTestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        // Disable middleware for testing
-        // $this->withoutMiddleware();
-        // Create admin user
-
     }
+
     protected function actingAsAdmin()
     {
-        $admin = User::factory()->create([
+        $admin = $this->getAdmin();
+        return $this->actingAs($admin);
+    }
+
+    protected function getAdmin()
+    {
+        return User::factory()->create([
             'email' => 'admin@gmail.com',
             'password' => Hash::make('123'),
             ## Add role_id to the factory
             'role_id' => Role::factory()->create()->id,
         ]);
-        return $this->actingAs($admin);
     }
 }
