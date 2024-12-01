@@ -27,11 +27,11 @@ class HasPermissionMiddleware
 
         $routeName = GateService::getGateDefineFromRouteName($request->route()->getName());
 
-        if ($request->user()->can($routeName)) {
+        if ($request->user()->can($routeName) || Gate::allows("superAdmin")) {
             return $next($request);
         } else if (Gate::allows('admin')) {
             $gate = array_filter(Gate::abilities(), function ($var, $key) {
-                return  str_contains($key, 'admin');
+                return str_contains($key, 'admin');
             }, ARRAY_FILTER_USE_BOTH);
 
             //check if admin site

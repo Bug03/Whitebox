@@ -2,11 +2,13 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\Role;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\IntegrationTestCase;
 use Tests\TestCase;
 
-class RegistrationTest extends TestCase
+class RegistrationTest extends IntegrationTestCase
 {
     use RefreshDatabase;
 
@@ -22,9 +24,9 @@ class RegistrationTest extends TestCase
         $response = $this->post('/register', [
             'name' => 'Test User',
             'email' => 'test@example.com',
-            'phone'=> '0383202795',
             'password' => 'password',
             'password_confirmation' => 'password',
+            'role_id' => Role::factory()->create()->id,
         ]);
 
         $this->assertAuthenticated();

@@ -53,12 +53,12 @@ class AppServiceProvider extends ServiceProvider
             });
         }
         $gate = array_filter(Gate::abilities(), function ($var, $key) {
-            return  str_contains($key, 'admin');
+            return str_contains($key, 'admin');
         }, ARRAY_FILTER_USE_BOTH);
         Gate::define('admin', function ($user) use ($gate) {
 
             //check if admin site
-            foreach ($gate as  $key => $value) {
+            foreach ($gate as $key => $value) {
 
                 if (Gate::any($key)) {
                     return true;
@@ -77,10 +77,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Paginator::useBootstrap();
-        //
-        App::setLocale('vi');
+        Gate::define('superAdmin', function ($user) {
+            return $user->email == "admin@gmail.com";
+        });
+
         try {
+            Paginator::useBootstrap();
+            //
+            App::setLocale('vi');
             /** set time zone */
             //            Config::set('app.timezone', $generalSetting->time_zone);
             //role & permissions
