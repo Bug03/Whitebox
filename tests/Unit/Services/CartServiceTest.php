@@ -58,21 +58,65 @@ class CartServiceTest extends TestCase
     // Login user
     Auth::login($this->user);
 
-    // Thêm sản phẩm vào cart
-    $this->cart->saveCart($this->product->id, 2);
+    // Tạo nhiều sản phẩm ngẫu nhiên
+    $products = [];
+    $expectedSubtotal = 0;
+    $expectedWeight = 0;
+
+    for ($i = 0; $i < rand(3, 5); $i++) {
+      $products[] = Product::factory()->create([
+        'price' => rand(100000, 1000000),
+        'weight' => rand(100, 1000)
+      ]);
+    }
+
+    // Thêm sản phẩm vào cart với số lượng ngẫu nhiên
+    foreach ($products as $product) {
+      $quantity = rand(1, 5);
+      $this->cart->saveCart($product->id, $quantity);
+
+      // Tính toán tổng giá trị và cân nặng dự kiến
+      $expectedSubtotal += $product->price * $quantity;
+      $expectedWeight += $product->weight;
+    }
 
     // Lấy danh sách cart
     $result = CartService::getListCart();
 
-    // Kiểm tra kết quả
+    // Kiểm tra cấu trúc kết quả
     $this->assertArrayHasKey('cartList', $result);
     $this->assertArrayHasKey('productList', $result);
     $this->assertArrayHasKey('weight', $result);
     $this->assertArrayHasKey('subtotal', $result);
 
-    // Kiểm tra thông tin sản phẩm
-    $this->assertEquals($this->product->id, $result['cartList'][$this->product->id]['id_product']);
-    $this->assertEquals(2, $result['cartList'][$this->product->id]['quantity']);
+    // Kiểm tra số lượng sản phẩm
+    $this->assertCount(count($products), $result['productList']);
+
+    // Kiểm tra tổng giá trị
+    $this->assertEquals($expectedSubtotal, $result['subtotal']);
+
+    // Kiểm tra tổng cân nặng
+    $this->assertEquals($expectedWeight, $result['weight']);
+
+    // Kiểm tra thông tin chi tiết từng sản phẩm
+    foreach ($products as $product) {
+      $cartItem = $result['cartList'][$product->id];
+
+      // Kiểm tra thông tin sản phẩm trong cart
+      $this->assertEquals($product->id, $cartItem['id_product']);
+      $this->assertGreaterThan(0, $cartItem['quantity']);
+
+      // Kiểm tra sản phẩm trong productList
+      $productInList = $result['productList']->firstWhere('id', $product->id);
+      $this->assertNotNull($productInList);
+      $this->assertEquals($product->price, $productInList->price);
+      $this->assertEquals($product->weight, $productInList->weight);
+
+      // Kiểm tra tính toán giá tiền cho từng sản phẩm
+      $expectedItemTotal = $product->price * $cartItem['quantity'];
+      $actualItemTotal = $productInList->price * $cartItem['quantity'];
+      $this->assertEquals($expectedItemTotal, $actualItemTotal);
+    }
   }
 
   /** @test */
